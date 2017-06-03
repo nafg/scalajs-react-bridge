@@ -1,11 +1,15 @@
 package com.payalabs.scalajs.react.bridge.test
 
-import com.payalabs.scalajs.react.bridge.{ReactBridgeComponent, JsWriter}
+import com.payalabs.scalajs.react.bridge.{JsWriter, ReactBridgeComponent}
 import japgolly.scalajs.react._
+import japgolly.scalajs.react.raw.ReactElement
 import japgolly.scalajs.react.test.ReactTestUtils
+import japgolly.scalajs.react.vdom.VdomElement
 import org.scalatest.FunSuite
+import japgolly.scalajs.react.test.raw.ReactAddonsTestUtils.Simulate
 
 import scala.scalajs.js
+import scala.scalajs.js.annotation.JSImport
 
 class NameType(val name :String) extends AnyVal
 
@@ -23,82 +27,85 @@ object Person {
   }
 }
 
+@JSImport("test-component.js", "TestComponent")
+class TestComponentImport extends js.Any
+
 class ReactBridgeComponentTest extends FunSuite {
   test("scalar properties") {
     case class TestComponent(id: js.UndefOr[String] = js.undefined, className: js.UndefOr[String] = js.undefined,
-                             ref: js.UndefOr[String] = js.undefined, key: js.UndefOr[Any] = js.undefined,
+                             ref: js.UndefOr[String] = js.undefined, key: js.UndefOr[Key] = js.undefined,
                              name: js.UndefOr[String] = js.undefined, age: js.UndefOr[Int] = js.undefined) extends ReactBridgeComponent
 
-    val testComponent: ReactElement = TestComponent(name = "foo", age = 25)()
+    val testComponent: VdomElement = TestComponent(name = "foo", age = 25)()().vdomElement
 
     val mounted = ReactTestUtils.renderIntoDocument(testComponent)
-    assert(mounted.getDOMNode().querySelector("#name").textContent === "foo")
-    assert(mounted.getDOMNode().querySelector("#age").textContent === "25")
+    assert(mounted.getDOMNode.querySelector("#name").textContent === "foo")
+    assert(mounted.getDOMNode.querySelector("#age").textContent === "25")
   }
 
 
   test("array properties") {
     case class TestComponent(id: js.UndefOr[String] = js.undefined, className: js.UndefOr[String] = js.undefined,
-                             ref: js.UndefOr[String] = js.undefined, key: js.UndefOr[Any] = js.undefined,
+                             ref: js.UndefOr[String] = js.undefined, key: js.UndefOr[Key] = js.undefined,
                              names: js.UndefOr[Seq[String]], ages: js.UndefOr[scala.collection.immutable.Seq[Int]]) extends ReactBridgeComponent
 
-    val testComponent: ReactElement = TestComponent(names = Seq("foo", "bar"), ages = scala.collection.immutable.Seq(5,10))()
+    val testComponent: VdomElement = TestComponent(names = Seq("foo", "bar"), ages = scala.collection.immutable.Seq(5,10))()().vdomElement
 
     val mounted = ReactTestUtils.renderIntoDocument(testComponent)
-    assert(mounted.getDOMNode().querySelector("#names").textContent === "[foo,bar]")
-    assert(mounted.getDOMNode().querySelector("#ages").textContent === "[5,10]")
+    assert(mounted.getDOMNode.querySelector("#names").textContent === "[foo,bar]")
+    assert(mounted.getDOMNode.querySelector("#ages").textContent === "[5,10]")
   }
 
 
   test("map properties") {
     case class TestComponent(id: js.UndefOr[String] = js.undefined, className: js.UndefOr[String] = js.undefined,
-                             ref: js.UndefOr[String] = js.undefined, key: js.UndefOr[Any] = js.undefined,
+                             ref: js.UndefOr[String] = js.undefined, key: js.UndefOr[Key] = js.undefined,
                              props: js.UndefOr[Map[String, Any]] = js.undefined) extends ReactBridgeComponent
 
-    val testComponent: ReactElement = TestComponent(props = Map("one" -> 1, "two" -> "2", "foo" -> "bar"))()
+    val testComponent: VdomElement = TestComponent(props = Map("one" -> 1, "two" -> "2", "foo" -> "bar"))()().vdomElement
 
     val mounted = ReactTestUtils.renderIntoDocument(testComponent)
-    assert(mounted.getDOMNode().querySelector("#props").textContent === "{one->1,two->2,foo->bar}")
+    assert(mounted.getDOMNode.querySelector("#props").textContent === "{one->1,two->2,foo->bar}")
   }
 
 
   test("value class object properties") {
     case class TestComponent(id: js.UndefOr[String] = js.undefined, className: js.UndefOr[String] = js.undefined,
-                             ref: js.UndefOr[String] = js.undefined, key: js.UndefOr[Any] = js.undefined,
+                             ref: js.UndefOr[String] = js.undefined, key: js.UndefOr[Key] = js.undefined,
                              props: js.UndefOr[NameType] = js.undefined) extends ReactBridgeComponent
 
-    val testComponent: ReactElement = TestComponent(props = new NameType("dude"))()
+    val testComponent: VdomElement = TestComponent(props = new NameType("dude"))()().vdomElement
 
     val mounted = ReactTestUtils.renderIntoDocument(testComponent)
-    assert(mounted.getDOMNode().querySelector("#props").textContent === "dude")
+    assert(mounted.getDOMNode.querySelector("#props").textContent === "dude")
   }
 
 
   test("non value class object properties") {
     case class TestComponent(id: js.UndefOr[String] = js.undefined, className: js.UndefOr[String] = js.undefined,
-                             ref: js.UndefOr[String] = js.undefined, key: js.UndefOr[Any] = js.undefined,
+                             ref: js.UndefOr[String] = js.undefined, key: js.UndefOr[Key] = js.undefined,
                              props: js.UndefOr[Person] = js.undefined) extends ReactBridgeComponent
 
-    val testComponent: ReactElement = TestComponent(props = Person("Krishna", 10))()
+    val testComponent: VdomElement = TestComponent(props = Person("Krishna", 10))()().vdomElement
 
     val mounted = ReactTestUtils.renderIntoDocument(testComponent)
-    assert(mounted.getDOMNode().querySelector("#props").textContent === "{name->Krishna,age->10}")
+    assert(mounted.getDOMNode.querySelector("#props").textContent === "{name->Krishna,age->10}")
   }
 
   test("seq of object properties") {
     case class TestComponent(id: js.UndefOr[String] = js.undefined, className: js.UndefOr[String] = js.undefined,
-                             ref: js.UndefOr[String] = js.undefined, key: js.UndefOr[Any] = js.undefined,
+                             ref: js.UndefOr[String] = js.undefined, key: js.UndefOr[Key] = js.undefined,
                              props: js.UndefOr[Seq[Person]] = js.undefined) extends ReactBridgeComponent
 
-    val testComponent: ReactElement = TestComponent(props = Seq(Person("First", 10), Person("Second", 11)))()
+    val testComponent: VdomElement = TestComponent(props = Seq(Person("First", 10), Person("Second", 11)))()().vdomElement
     val mounted = ReactTestUtils.renderIntoDocument(testComponent)
-    assert(mounted.getDOMNode().querySelector("#props").textContent === "[{name->First,age->10},{name->Second,age->11}]")
+    assert(mounted.getDOMNode.querySelector("#props").textContent === "[{name->First,age->10},{name->Second,age->11}]")
   }
 
 
   test("function properties") {
     case class TestComponent(id: js.UndefOr[String] = js.undefined, className: js.UndefOr[String] = js.undefined,
-                             ref: js.UndefOr[String] = js.undefined, key: js.UndefOr[Any] = js.undefined,
+                             ref: js.UndefOr[String] = js.undefined, key: js.UndefOr[Key] = js.undefined,
                              onSomething1: js.UndefOr[Int => Unit] = js.undefined,
                              onSomething2: js.UndefOr[(Int, String) => Unit] = js.undefined,
                              onSomething3: js.UndefOr[(Int, String, js.Array[Any]) => Unit] = js.undefined) extends ReactBridgeComponent
@@ -124,26 +131,29 @@ class ReactBridgeComponentTest extends FunSuite {
       assert(a.toArray === Array(3, "four"))
     }
 
-    val testComponent: ReactElement = TestComponent(onSomething1 = change1 _, onSomething2 = change2 _, onSomething3 = change3 _)()
+    val testComponent: VdomElement =
+      TestComponent(onSomething1 = change1 _,
+        onSomething2 = change2 _,
+        onSomething3 = change3 _)()().vdomElement
 
     val mounted = ReactTestUtils.renderIntoDocument(testComponent)
 
     js.Dynamic.global.TestComponent.eventTestData = js.Array(1)
-    ReactTestUtils.Simulate.click(mounted.getDOMNode().querySelector("#onSomething1"))
+    Simulate.click(mounted.getDOMNode.querySelector("#onSomething1"))
     assert(something1 === true)
 
     js.Dynamic.global.TestComponent.eventTestData = js.Array(1, "two")
-    ReactTestUtils.Simulate.click(mounted.getDOMNode().querySelector("#onSomething2"))
+    Simulate.click(mounted.getDOMNode.querySelector("#onSomething2"))
     assert(something2 === true)
 
     js.Dynamic.global.TestComponent.eventTestData = js.Array(1, "two", js.Array[Any](3, "four"))
-    ReactTestUtils.Simulate.click(mounted.getDOMNode().querySelector("#onSomething3"))
+    Simulate.click(mounted.getDOMNode.querySelector("#onSomething3"))
     assert(something3 === true)
   }
 
   test("function properties that return Callback") {
     case class TestComponent(id: js.UndefOr[String] = js.undefined, className: js.UndefOr[String] = js.undefined,
-                             ref: js.UndefOr[String] = js.undefined, key: js.UndefOr[Any] = js.undefined,
+                             ref: js.UndefOr[String] = js.undefined, key: js.UndefOr[Key] = js.undefined,
                              onSomething1: js.UndefOr[Int => Callback] = js.undefined,
                              onSomething2: js.UndefOr[(Int, String) => Callback] = js.undefined,
                              onSomething3: js.UndefOr[(Int, String, js.Array[Any]) => Callback] = js.undefined,
@@ -175,35 +185,35 @@ class ReactBridgeComponentTest extends FunSuite {
       something4 = true
     }
 
-    val testComponent: ReactElement = TestComponent(onSomething1 = change1 _, onSomething2 = change2 _, onSomething3 = change3 _, onSomething4 = change4)()
+    val testComponent: VdomElement = TestComponent(onSomething1 = change1 _, onSomething2 = change2 _, onSomething3 = change3 _, onSomething4 = change4)()().vdomElement
 
     val mounted = ReactTestUtils.renderIntoDocument(testComponent)
 
     js.Dynamic.global.TestComponent.eventTestData = js.Array(1)
-    ReactTestUtils.Simulate.click(mounted.getDOMNode().querySelector("#onSomething1"))
+    Simulate.click(mounted.getDOMNode.querySelector("#onSomething1"))
     assert(something1 === true)
 
     js.Dynamic.global.TestComponent.eventTestData = js.Array(1, "two")
-    ReactTestUtils.Simulate.click(mounted.getDOMNode().querySelector("#onSomething2"))
+    Simulate.click(mounted.getDOMNode.querySelector("#onSomething2"))
     assert(something2 === true)
 
     js.Dynamic.global.TestComponent.eventTestData = js.Array(1, "two", js.Array[Any](3, "four"))
-    ReactTestUtils.Simulate.click(mounted.getDOMNode().querySelector("#onSomething3"))
+    Simulate.click(mounted.getDOMNode.querySelector("#onSomething3"))
     assert(something3 === true)
 
-    ReactTestUtils.Simulate.click(mounted.getDOMNode().querySelector("#onSomething4"))
+    Simulate.click(mounted.getDOMNode.querySelector("#onSomething4"))
     assert(something4 === true)
   }
 
 
   test("properties without js.UndefOr container") {
     case class TestComponent(id: js.UndefOr[String] = js.undefined, className: js.UndefOr[String] = js.undefined,
-                             ref: js.UndefOr[String] = js.undefined, key: js.UndefOr[Any] = js.undefined,
+                             ref: js.UndefOr[String] = js.undefined, key: js.UndefOr[Key] = js.undefined,
                              name: String, age: Int) extends ReactBridgeComponent
-    val testComponent: ReactElement = TestComponent(name = "foo", age = 25)()
+    val testComponent: VdomElement = TestComponent(name = "foo", age = 25)()().vdomElement
 
     val mounted = ReactTestUtils.renderIntoDocument(testComponent)
-    assert(mounted.getDOMNode().querySelector("#name").textContent === "foo")
-    assert(mounted.getDOMNode().querySelector("#age").textContent === "25")
+    assert(mounted.getDOMNode.querySelector("#name").textContent === "foo")
+    assert(mounted.getDOMNode.querySelector("#age").textContent === "25")
   }
 }

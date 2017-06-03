@@ -1,16 +1,17 @@
 package com.payalabs.scalajs.react.bridge
 
+import japgolly.scalajs.react.CtorType.{ChildArg, Children}
 import japgolly.scalajs.react._
+import japgolly.scalajs.react.component.Js
+import japgolly.scalajs.react.component.Js.{RawMounted, UnmountedWithRawType}
+import japgolly.scalajs.react.vdom.VdomElement
 
 import scala.language.experimental.macros
 import scala.reflect.macros.blackbox._
 import scala.scalajs.js
 import scala.scalajs.js.Dynamic.literal
 import js.Dynamic.global
-
-trait JsWriter[T] {
-  def toJs(value: T) : js.Any
-}
+import scala.scalajs.js.{JSON, Object}
 
 /**
  * See project's [README.md](https://github.com/payalabs/scalajs-react-bridge)
@@ -20,9 +21,10 @@ abstract class ReactBridgeComponent {
   val id: js.UndefOr[String]
   val className: js.UndefOr[String]
   val ref: js.UndefOr[String]
-  val key: js.UndefOr[Any]
+  val key: js.UndefOr[Key]
 
-  def component(componentPrefixes: Array[String], componentName: String, propsList: List[(String, js.UndefOr[js.Any])], children: js.Any*): ReactElement = {
+  def component(componentPrefixes: Array[String], componentName: String,
+                propsList: List[(String, js.UndefOr[js.Any])]): Js.ComponentSimple[Object, CtorType.Children, UnmountedWithRawType[Object, Null, RawMounted]] = {
     val props = literal()
     propsList.foreach { case (k, jsV) =>
       jsV.foreach { v =>
@@ -33,8 +35,15 @@ abstract class ReactBridgeComponent {
     val componentFunction = componentPrefixes.foldLeft(global) {
       _.selectDynamic(_)
     }.selectDynamic(componentName)
-    val factory = React.createFactory(componentFunction.asInstanceOf[ReactClass[Any, Any, Any, TopNode]])
-    factory(props.asInstanceOf[WrapObj[Any]], children.asInstanceOf[Seq[ReactNode]]:_*)
+
+    val jsComponent = JsComponent[js.Object, Children.Varargs, Null](componentFunction)
+
+    val x: Js.ComponentSimple[Object, CtorType.Children, UnmountedWithRawType[Object, Null, RawMounted]] = jsComponent.mapCtorType { c =>
+      val withProps = c.withProps(props)
+      key.fold(withProps)(k => withProps.withKey(k))
+    }
+
+    x//.apply(children: _*).vdomElement
   }
 }
 
@@ -42,11 +51,11 @@ object ReactBridgeComponent {
 
   // See https://meta.plasm.us/posts/2013/06/21/macro-methods-and-subtypes
   implicit class ReactNativeComponentThisThing[A <: ReactBridgeComponent](val value: A) extends AnyVal {
-    def apply(children: js.Any*): ReactElement = macro ReactBridgeComponent.applyImpl[A]
+    def apply(): Js.ComponentSimple[Object, CtorType.Children, UnmountedWithRawType[Object, Null, RawMounted]] = macro ReactBridgeComponent.applyImpl[A]
   }
 
   def applyImpl[A <: ReactBridgeComponent : c.WeakTypeTag]
-    (c: Context)(children: c.Expr[js.Any]*): c.Expr[ReactElement] = {
+    (c: Context)(): c.Expr[Js.ComponentSimple[Object, CtorType.Children, UnmountedWithRawType[Object, Null, RawMounted]]] = {
 
     import c.universe._
     val tpe = weakTypeTag[A].tpe
@@ -62,10 +71,10 @@ object ReactBridgeComponent {
     val componentTree =
       q"""
          import com.payalabs.scalajs.react.bridge.JsWriter
-         ${c.prefix.tree}.value.component($componentNamespace, $typeShortName, $params, ..$children)
+         ${c.prefix.tree}.value.component($componentNamespace, $typeShortName, $params)
       """
 
-    c.Expr[ReactElement](componentTree)
+    c.Expr[Js.ComponentSimple[Object, CtorType.Children, UnmountedWithRawType[Object, Null, RawMounted]]](componentTree)
   }
 
   private def computeParams(c: Context)(tpe: c.universe.Type): List[(String, c.universe.Tree)] = {
