@@ -7,10 +7,6 @@ version := "0.4.0-SNAPSHOT"
 
 scalaVersion := "2.12.1"
 
-jsDependencies += RuntimeDOM
-
-jsEnv := PhantomJSEnv().value
-
 libraryDependencies ++= {
   val scalaJsDomV = "0.9.2"
   val scalaJsReactV = "1.0.0"
@@ -25,9 +21,13 @@ libraryDependencies ++= {
   )
 }
 
-val reactV = "15.5.4"
+jsDependencies += RuntimeDOM
+
+jsEnv := PhantomJSEnv().value
+
+val reactV = "15.5.3"
 jsDependencies += "org.webjars.npm" % "react" % reactV % Test / "react-with-addons.js" minified "react-with-addons.min.js" commonJSName "React"
-jsDependencies += "org.webjars.npm" % "react-dom" % reactV % Test / "react-dom.js" minified "react-dom.min.js" commonJSName "ReactDOM"
+jsDependencies += "org.webjars.npm" % "react-dom" % reactV % Test / "react-dom.js" minified "react-dom.min.js" commonJSName "ReactDOM" dependsOn "react-with-addons.js"
 jsDependencies in Test += ProvidedJS / "test-component.js" dependsOn "react-with-addons.js"
 
 sourceGenerators in Compile <+= sourceManaged in Compile map { dir =>

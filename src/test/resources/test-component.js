@@ -1,3 +1,15 @@
+"use strict";
+
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
 /*
 A generic component to facilitate testing.
 
@@ -23,50 +35,79 @@ TestComponent.eventTestData to, say, ["foo",5,"bar"]. Now when test simulates a 
 TestComponent will invoke the function set as the property f("foo", 5, "bar").
 */
 
-TestComponent = React.createClass({
-    render: function () {
-        var props = this.props;
+var TestComponent = function (_React$Component) {
+    _inherits(TestComponent, _React$Component);
 
-        var propKeys = Object.keys(props).filter(function(key) {
-            return !(key == "children" || key == "key" || key == "ref");
-        });
+    function TestComponent() {
+        _classCallCheck(this, TestComponent);
 
-        var propElems = propKeys.map(function(key) {
-            var value = props[key];
-            if (typeof(value) === 'function') {
-                return React.DOM.span({id: key, key: key, onClick: TestComponent.testFunction(key, value)})
+        return _possibleConstructorReturn(this, (TestComponent.__proto__ || Object.getPrototypeOf(TestComponent)).apply(this, arguments));
+    }
+
+    _createClass(TestComponent, [{
+        key: "render",
+        value: function render() {
+            var _this2 = this;
+
+            var props = this.props;
+
+            var propKeys = Object.keys(props).filter(function (key) {
+                return !(key == "children" || key == "key" || key == "ref");
+            });
+
+            var propElems = propKeys.map(function (key) {
+                var value = props[key];
+                if (typeof value === 'function') {
+                    return React.createElement("span", {
+                        id: key,
+                        key: key,
+                        onClick: _this2.testFunction(key, value) });
+                } else {
+                    return React.createElement(
+                        "span",
+                        { id: key, key: key },
+                        _this2.toTestString(value)
+                    );
+                }
+            });
+
+            return React.createElement(
+                "div",
+                null,
+                propElems
+            );
+        }
+    }, {
+        key: "toTestString",
+        value: function toTestString(value) {
+            var _this3 = this;
+
+            if (Array.isArray(value)) {
+                var encodedArray = value.map(function (element) {
+                    return _this3.toTestString(element);
+                }).join(',');
+                return '[' + encodedArray + ']';
+            } else if ((typeof value === "undefined" ? "undefined" : _typeof(value)) === "object") {
+                var keys = Object.keys(value);
+                var strings = keys.map(function (key) {
+                    var v = value[key];
+                    return key + "->" + _this3.toTestString(v);
+                });
+                return '{' + strings.join(',') + '}';
             } else {
-                return React.DOM.span({id: key, key: key}, TestComponent.toTestString(props[key]))
+                return value;
             }
-        });
+        }
+    }, {
+        key: "testFunction",
+        value: function testFunction(key, f) {
+            return function (e) {
+                f.apply(this, TestComponent.eventTestData);
+            };
+        }
+    }]);
 
-        return React.DOM.div(null, propElems);
-    }
-});
+    return TestComponent;
+}(React.Component);
 
-TestComponent.toTestString = function(value) {
-    if (Array.isArray(value)) {
-        var encodedArray = value.map(function(element) {
-            return TestComponent.toTestString(element);
-        }).join(',')
-        return '[' + encodedArray +']';
-    } else if (typeof(value) === "object") {
-        var keys = Object.keys(value)
-        var strings = keys.map(function(key) {
-            var v = value[key];
-            return key + "->" + TestComponent.toTestString(v);
-        });
-        return '{' + strings.join(',') + '}';
-    } else {
-        return value;
-    }
-}
-
-// A way to pass back data on the next click
 TestComponent.eventTestData = [];
-
-TestComponent.testFunction = function(key, f) {
-    return function(e) {
-        f.apply(this, TestComponent.eventTestData)
-    }
-}

@@ -2,14 +2,11 @@ package com.payalabs.scalajs.react.bridge.test
 
 import com.payalabs.scalajs.react.bridge.{JsWriter, ReactBridgeComponent}
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.raw.ReactElement
 import japgolly.scalajs.react.test.ReactTestUtils
-import japgolly.scalajs.react.vdom.VdomElement
 import org.scalatest.FunSuite
 import japgolly.scalajs.react.test.raw.ReactAddonsTestUtils.Simulate
 
 import scala.scalajs.js
-import scala.scalajs.js.annotation.JSImport
 
 class NameType(val name :String) extends AnyVal
 
@@ -27,29 +24,25 @@ object Person {
   }
 }
 
-@JSImport("test-component.js", "TestComponent")
-class TestComponentImport extends js.Any
-
 class ReactBridgeComponentTest extends FunSuite {
   test("scalar properties") {
     case class TestComponent(id: js.UndefOr[String] = js.undefined, className: js.UndefOr[String] = js.undefined,
                              ref: js.UndefOr[String] = js.undefined, key: js.UndefOr[Key] = js.undefined,
                              name: js.UndefOr[String] = js.undefined, age: js.UndefOr[Int] = js.undefined) extends ReactBridgeComponent
 
-    val testComponent: VdomElement = TestComponent(name = "foo", age = 25)()().vdomElement
+    val testComponent = TestComponent(name = "foo", age = 25)()()
 
     val mounted = ReactTestUtils.renderIntoDocument(testComponent)
     assert(mounted.getDOMNode.querySelector("#name").textContent === "foo")
     assert(mounted.getDOMNode.querySelector("#age").textContent === "25")
   }
 
-
   test("array properties") {
     case class TestComponent(id: js.UndefOr[String] = js.undefined, className: js.UndefOr[String] = js.undefined,
                              ref: js.UndefOr[String] = js.undefined, key: js.UndefOr[Key] = js.undefined,
                              names: js.UndefOr[Seq[String]], ages: js.UndefOr[scala.collection.immutable.Seq[Int]]) extends ReactBridgeComponent
 
-    val testComponent: VdomElement = TestComponent(names = Seq("foo", "bar"), ages = scala.collection.immutable.Seq(5,10))()().vdomElement
+    val testComponent = TestComponent(names = Seq("foo", "bar"), ages = scala.collection.immutable.Seq(5,10))()()
 
     val mounted = ReactTestUtils.renderIntoDocument(testComponent)
     assert(mounted.getDOMNode.querySelector("#names").textContent === "[foo,bar]")
@@ -62,7 +55,7 @@ class ReactBridgeComponentTest extends FunSuite {
                              ref: js.UndefOr[String] = js.undefined, key: js.UndefOr[Key] = js.undefined,
                              props: js.UndefOr[Map[String, Any]] = js.undefined) extends ReactBridgeComponent
 
-    val testComponent: VdomElement = TestComponent(props = Map("one" -> 1, "two" -> "2", "foo" -> "bar"))()().vdomElement
+    val testComponent = TestComponent(props = Map("one" -> 1, "two" -> "2", "foo" -> "bar"))()()
 
     val mounted = ReactTestUtils.renderIntoDocument(testComponent)
     assert(mounted.getDOMNode.querySelector("#props").textContent === "{one->1,two->2,foo->bar}")
@@ -74,7 +67,7 @@ class ReactBridgeComponentTest extends FunSuite {
                              ref: js.UndefOr[String] = js.undefined, key: js.UndefOr[Key] = js.undefined,
                              props: js.UndefOr[NameType] = js.undefined) extends ReactBridgeComponent
 
-    val testComponent: VdomElement = TestComponent(props = new NameType("dude"))()().vdomElement
+    val testComponent = TestComponent(props = new NameType("dude"))()()
 
     val mounted = ReactTestUtils.renderIntoDocument(testComponent)
     assert(mounted.getDOMNode.querySelector("#props").textContent === "dude")
@@ -86,7 +79,7 @@ class ReactBridgeComponentTest extends FunSuite {
                              ref: js.UndefOr[String] = js.undefined, key: js.UndefOr[Key] = js.undefined,
                              props: js.UndefOr[Person] = js.undefined) extends ReactBridgeComponent
 
-    val testComponent: VdomElement = TestComponent(props = Person("Krishna", 10))()().vdomElement
+    val testComponent = TestComponent(props = Person("Krishna", 10))()()
 
     val mounted = ReactTestUtils.renderIntoDocument(testComponent)
     assert(mounted.getDOMNode.querySelector("#props").textContent === "{name->Krishna,age->10}")
@@ -97,7 +90,7 @@ class ReactBridgeComponentTest extends FunSuite {
                              ref: js.UndefOr[String] = js.undefined, key: js.UndefOr[Key] = js.undefined,
                              props: js.UndefOr[Seq[Person]] = js.undefined) extends ReactBridgeComponent
 
-    val testComponent: VdomElement = TestComponent(props = Seq(Person("First", 10), Person("Second", 11)))()().vdomElement
+    val testComponent = TestComponent(props = Seq(Person("First", 10), Person("Second", 11)))()()
     val mounted = ReactTestUtils.renderIntoDocument(testComponent)
     assert(mounted.getDOMNode.querySelector("#props").textContent === "[{name->First,age->10},{name->Second,age->11}]")
   }
@@ -131,10 +124,10 @@ class ReactBridgeComponentTest extends FunSuite {
       assert(a.toArray === Array(3, "four"))
     }
 
-    val testComponent: VdomElement =
+    val testComponent =
       TestComponent(onSomething1 = change1 _,
         onSomething2 = change2 _,
-        onSomething3 = change3 _)()().vdomElement
+        onSomething3 = change3 _)()()
 
     val mounted = ReactTestUtils.renderIntoDocument(testComponent)
 
@@ -185,7 +178,7 @@ class ReactBridgeComponentTest extends FunSuite {
       something4 = true
     }
 
-    val testComponent: VdomElement = TestComponent(onSomething1 = change1 _, onSomething2 = change2 _, onSomething3 = change3 _, onSomething4 = change4)()().vdomElement
+    val testComponent = TestComponent(onSomething1 = change1 _, onSomething2 = change2 _, onSomething3 = change3 _, onSomething4 = change4)()()
 
     val mounted = ReactTestUtils.renderIntoDocument(testComponent)
 
@@ -210,10 +203,11 @@ class ReactBridgeComponentTest extends FunSuite {
     case class TestComponent(id: js.UndefOr[String] = js.undefined, className: js.UndefOr[String] = js.undefined,
                              ref: js.UndefOr[String] = js.undefined, key: js.UndefOr[Key] = js.undefined,
                              name: String, age: Int) extends ReactBridgeComponent
-    val testComponent: VdomElement = TestComponent(name = "foo", age = 25)()().vdomElement
+    val testComponent = TestComponent(name = "foo", age = 25)()()
 
     val mounted = ReactTestUtils.renderIntoDocument(testComponent)
     assert(mounted.getDOMNode.querySelector("#name").textContent === "foo")
     assert(mounted.getDOMNode.querySelector("#age").textContent === "25")
   }
+
 }
