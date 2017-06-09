@@ -7,9 +7,11 @@ version := "0.4.0-SNAPSHOT"
 
 scalaVersion := "2.12.1"
 
+scalacOptions := Seq("-unchecked", "-deprecation")
+
 libraryDependencies ++= {
   val scalaJsDomV = "0.9.2"
-  val scalaJsReactV = "1.0.0"
+  val scalaJsReactV = "1.0.1"
   val scalatestV = "3.0.1"
 
   Seq(
