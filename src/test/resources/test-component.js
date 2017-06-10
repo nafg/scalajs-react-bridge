@@ -63,18 +63,23 @@ var TestComponent = function (_React$Component) {
                         key: key,
                         onClick: _this2.testFunction(key, value) });
                 } else {
-                    return React.createElement(
-                        "span",
-                        { id: key, key: key },
-                        _this2.toTestString(value)
-                    );
+                    return React.createElement("span", { id: key, key: key, "data-test": _this2.toTestString(value) });
                 }
             });
 
             return React.createElement(
                 "div",
                 null,
-                propElems
+                React.createElement(
+                    "div",
+                    { key: "props", id: "props" },
+                    propElems
+                ),
+                React.createElement(
+                    "div",
+                    { key: "children", id: "children" },
+                    props.children
+                )
             );
         }
     }, {

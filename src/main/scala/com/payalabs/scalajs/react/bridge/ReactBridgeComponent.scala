@@ -3,15 +3,15 @@ package com.payalabs.scalajs.react.bridge
 import japgolly.scalajs.react.CtorType.{ChildArg, Children}
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.component.Js
-import japgolly.scalajs.react.component.Js.{RawMounted, UnmountedWithRawType}
-import japgolly.scalajs.react.vdom.VdomElement
+import japgolly.scalajs.react.component.Js.{MountedWithRawType, RawMounted, UnmountedSimple, UnmountedWithRawType}
+import japgolly.scalajs.react.vdom.{TagMod, VdomElement}
 
 import scala.language.experimental.macros
 import scala.reflect.macros.blackbox._
 import scala.scalajs.js
 import scala.scalajs.js.Dynamic.literal
 import js.Dynamic.global
-import scala.scalajs.js.{JSON, Object}
+import scala.scalajs.js.Object
 
 /**
  * See project's [README.md](https://github.com/payalabs/scalajs-react-bridge)
@@ -19,6 +19,7 @@ import scala.scalajs.js.{JSON, Object}
 
 abstract class ReactBridgeComponent {
   type Component = ReactBridgeComponent.Component
+  type ComponentNoChild = ReactBridgeComponent.ComponentNoChild
 
   def component(componentPrefixes: Array[String],
                 componentName: String,
@@ -47,13 +48,32 @@ abstract class ReactBridgeComponent {
 object ReactBridgeComponent {
 
   type Component = Js.ComponentSimple[Object, CtorType.Children, UnmountedWithRawType[Object, Null, RawMounted]]
+  type ComponentNoChild = VdomElement
 
   // See https://meta.plasm.us/posts/2013/06/21/macro-methods-and-subtypes
   implicit class ReactNativeComponentThisThing[A <: ReactBridgeComponent](val value: A) extends AnyVal {
     def autoConstruct: Component = macro ReactBridgeComponent.autoConstructImpl[A]
+
+    def autoConstructNoChild: ComponentNoChild = macro ReactBridgeComponent.autoConstructNoChildImpl[A]
   }
 
   def autoConstructImpl[A <: ReactBridgeComponent : c.WeakTypeTag](c: Context): c.Expr[Component] = {
+    import c.universe._
+
+    val componentTree = computeComponentTree(c)
+
+    c.Expr[Component](q"""$componentTree""")
+  }
+
+  def autoConstructNoChildImpl[A <: ReactBridgeComponent : c.WeakTypeTag](c: Context): c.Expr[ComponentNoChild] = {
+    import c.universe._
+
+    val componentTree = computeComponentTree(c)
+
+    c.Expr[ComponentNoChild](q"""$componentTree().vdomElement""")
+  }
+
+  private def computeComponentTree[A <: ReactBridgeComponent : c.WeakTypeTag](c: Context): c.universe.Tree = {
     import c.universe._
 
     val tpe = weakTypeTag[A].tpe
@@ -66,13 +86,10 @@ object ReactBridgeComponent {
       ts => ts.annotations.filter(_.tree.tpe == typeOf[ComponentNamespace])
     }.headOption.map(a => a.tree.children.tail.head.toString.tail.init.split('.')).getOrElse(Array[String]())
 
-    val componentTree =
-      q"""
-         import com.payalabs.scalajs.react.bridge.JsWriter
-         ${c.prefix.tree}.value.component($componentNamespace, $typeShortName, $props, $key)
-      """
-
-    c.Expr[Component](componentTree)
+    q"""
+       import com.payalabs.scalajs.react.bridge.JsWriter
+       ${c.prefix.tree}.value.component($componentNamespace, $typeShortName, $props, $key)
+    """
   }
 
   private def computeParams(c: Context)(tpe: c.universe.Type): (List[(String, c.universe.Tree)], Option[c.universe.Tree]) = {

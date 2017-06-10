@@ -41,13 +41,18 @@ class TestComponent extends React.Component {
                         key={key}
                         onClick={this.testFunction(key, value)}/>
             } else {
-                    return <span id={key} key={key}>
-                        {this.toTestString(value)}
-                    </span>
+                    return <span id={key} key={key} data-test={this.toTestString(value)}/>
             }}
         );
 
-        return <div>{propElems}</div>;
+        return <div>
+                <div key="props" id="props">
+                    {propElems}
+                </div>
+                <div key="children" id="children">
+                    {props.children}
+                </div>
+               </div>;
     }
 
     toTestString(value) {
